@@ -22,16 +22,19 @@ async def main(key, data, **params):
 
 
 @expose.enricher(props=settings.props, keys=settings.use_keys)
-async def enrich(phone, event, key, **params):
+async def enrich(key, **params):
     """
     Handle incoming calls
     """
-    if key in settings.use_keys and phone and event == START_EVENT:
-        user = await rpc.request(CTRACK, USER_BY_PHONE, phone=phone)
-        if user:
-            logger.info('user', u=user)
-            uid = user.get('uid', None)
-            sess_no = user.get('sess_no', None)
-            if uid:
-                return {'uid': str(uid), 'sess_no': sess_no}
+    if key in settings.use_keys:
+        phone = params.pop('phone')
+        event = params.pop('event')
+        if phone and event and event == START_EVENT:
+            user = await rpc.request(CTRACK, USER_BY_PHONE, phone=phone)
+            if user:
+                logger.info('user', u=user)
+                uid = user.get('uid', None)
+                sess_no = user.get('sess_no', None)
+                if uid:
+                    return {'uid': str(uid), 'sess_no': sess_no}
     return {}
